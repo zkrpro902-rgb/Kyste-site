@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Kyste Tickets — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#050505;--surface:#0c0202;--card:#110303;--border:#1e0808;
+  --red:#DC143C;--red2:#ff2d55;--dim:#7a2020;--muted:#2a0a0a;
+  --text:#ede0e0;--sub:#8a6060;--green:#22c55e;--yellow:#eab308;
+  --discord:#5865F2;
+  --font-d:'Bebas Neue',sans-serif;--font-m:'DM Mono',monospace;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-m)}
+body{display:flex;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+
+/* ── LOGIN SCREEN ── */
+#loginScreen{
+  position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 40%, #1a0005 0%, #050505 70%);
+}
+.login-wrap{text-align:center;max-width:420px;padding:20px}
+.login-logo{font-family:var(--font-d);font-size:4rem;letter-spacing:.08em;color:var(--red);text-shadow:0 0 40px rgba(220,20,60,.5),0 0 80px rgba(220,20,60,.2);margin-bottom:8px;line-height:1}
+.login-sub{font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:48px}
+.login-card{background:var(--card);border:1px solid var(--border);padding:36px;position:relative;overflow:hidden}
+.login-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.login-title{font-family:var(--font-d);font-size:1.4rem;letter-spacing:.06em;margin-bottom:6px}
+.login-desc{font-size:.72rem;color:var(--sub);margin-bottom:32px;line-height:1.6}
+.discord-btn{
+  display:inline-flex;align-items:center;gap:12px;
+  background:var(--discord);color:#fff;border:none;padding:14px 28px;
+  font-family:var(--font-m);font-size:.85rem;letter-spacing:.06em;cursor:pointer;
+  clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+  transition:all .2s;width:100%;justify-content:center;
+}
+.discord-btn:hover{background:#4752c4;box-shadow:0 0 24px rgba(88,101,242,.4);transform:translateY(-1px)}
+.discord-btn svg{width:22px;height:22px;flex-shrink:0}
+.login-badge{
+  margin-top:20px;display:flex;align-items:center;justify-content:center;gap:8px;
+  font-size:.65rem;color:var(--muted);letter-spacing:.08em;
+}
+.login-badge::before,.login-badge::after{content:'';flex:1;height:1px;background:var(--border)}
+.login-err{
+  margin-top:14px;padding:10px 14px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);
+  color:#ef4444;font-size:.72rem;display:none;
+}
+
+/* ── LOADING SCREEN ── */
+#loadingScreen{
+  position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;
+  background:var(--bg);flex-direction:column;gap:16px;
+}
+.spinner{width:36px;height:36px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-size:.72rem;color:var(--dim);letter-spacing:.12em;text-transform:uppercase}
+
+/* ── SIDEBAR ── */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:50}
+.logo{padding:24px 20px;border-bottom:1px solid var(--border)}
+.logo-name{font-family:var(--font-d);font-size:1.4rem;letter-spacing:.06em;color:var(--red);text-shadow:0 0 16px rgba(220,20,60,.4)}
+.logo-ver{font-size:.6rem;color:var(--dim);margin-top:2px;letter-spacing:.1em}
+nav{padding:12px 0;flex:1}
+.ns{padding:10px 20px 4px;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+.ni{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;transition:all .15s;color:var(--sub);font-size:.78rem;border-left:2px solid transparent}
+.ni:hover{color:var(--text);background:rgba(220,20,60,.05);border-left-color:var(--dim)}
+.ni.active{color:var(--red);background:rgba(220,20,60,.08);border-left-color:var(--red)}
+.sfoot{padding:14px;border-top:1px solid var(--border)}
+/* User card */
+.user-card{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px;background:var(--muted);border:1px solid var(--border)}
+.user-av{width:32px;height:32px;border-radius:50%;border:2px solid var(--red);flex-shrink:0}
+.user-info{flex:1;min-width:0}
+.user-name{font-size:.75rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-tag{font-size:.6rem;color:var(--sub)}
+/* Bot status */
+.bot-status{display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:10px;background:var(--card);border:1px solid var(--border);font-size:.68rem}
+.bot-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.bot-dot.on{background:var(--green);box-shadow:0 0 6px var(--green)}
+.bot-dot.off{background:#ef4444;box-shadow:0 0 6px #ef4444}
+.bot-dot.unk{background:#555}
+.sdot{width:7px;height:7px;border-radius:50%;background:#333;display:inline-block;margin-right:6px}
+.sdot.on{background:var(--green);box-shadow:0 0 6px var(--green)}
+.sdot.off{background:#ef4444}
+.slbl{font-size:.66rem;color:var(--sub)}
+.logout-btn{width:100%;background:transparent;border:1px solid var(--border);color:var(--sub);padding:8px;font-family:var(--font-m);font-size:.7rem;cursor:pointer;transition:all .2s;margin-bottom:10px}
+.logout-btn:hover{border-color:#ef4444;color:#ef4444}
+.rbtn-s{width:100%;background:transparent;border:1px solid var(--border);color:var(--sub);padding:8px;font-family:var(--font-m);font-size:.7rem;cursor:pointer;transition:all .2s;margin-bottom:8px}
+.rbtn-s:hover{border-color:var(--red);color:var(--red)}
+
+/* ── MAIN ── */
+.main{margin-left:220px;flex:1;display:flex;flex-direction:column;position:relative;z-index:1}
+.topbar{height:54px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:14px;flex-shrink:0}
+.tbt{font-family:var(--font-d);font-size:1.15rem;letter-spacing:.06em}
+.tbb{font-size:.62rem;background:rgba(220,20,60,.1);border:1px solid rgba(220,20,60,.25);color:var(--red);padding:2px 10px;letter-spacing:.1em;text-transform:uppercase}
+.rbtn{margin-left:auto;background:transparent;border:1px solid var(--border);color:var(--sub);padding:6px 14px;font-family:var(--font-m);font-size:.7rem;cursor:pointer;transition:all .2s}
+.rbtn:hover{border-color:var(--red);color:var(--red)}
+.lref{font-size:.62rem;color:var(--muted)}
+.page{display:none;padding:28px;animation:fi .2s ease}
+.page.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ── STAT CARDS ── */
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:14px;margin-bottom:24px}
+.sc{background:var(--card);border:1px solid var(--border);padding:20px 18px;position:relative;overflow:hidden;transition:border-color .2s}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent,var(--red));opacity:.7}
+.sc:hover{border-color:var(--dim)}
+.sc-l{font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);margin-bottom:6px}
+.sc-v{font-family:var(--font-d);font-size:2.5rem;line-height:1;color:var(--accent,var(--red))}
+.sc-s{font-size:.65rem;color:var(--muted);margin-top:5px}
+.sc-i{position:absolute;top:16px;right:16px;font-size:1.2rem;opacity:.2}
+.shdr{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.stit{font-family:var(--font-d);font-size:1.3rem;letter-spacing:.05em}
+.slin{flex:1;height:1px;background:var(--border)}
+.tw{background:var(--card);border:1px solid var(--border);overflow:hidden;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:580px}
+thead{background:var(--surface)}
+th{padding:10px 14px;text-align:left;font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--border)}
+td{padding:10px 14px;font-size:.74rem;border-bottom:1px solid var(--border);color:var(--sub)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(220,20,60,.03);color:var(--text)}
+.b{display:inline-flex;align-items:center;padding:2px 7px;font-size:.62rem;letter-spacing:.07em;text-transform:uppercase;border:1px solid;border-radius:2px}
+.bo{color:var(--green);border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.07)}
+.bc{color:var(--sub);border-color:var(--border)}
+.bl{color:var(--green);border-color:rgba(34,197,94,.3)}
+.bm{color:var(--yellow);border-color:rgba(234,179,8,.3)}
+.bh{color:#ef4444;border-color:rgba(239,68,68,.3)}
+.bon{color:var(--green);border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.05)}
+.boff{color:var(--sub);border-color:var(--border)}
+.pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.pc{background:var(--card);border:1px solid var(--border);padding:18px;transition:border-color .2s}
+.pc:hover{border-color:var(--dim)}
+.lb{background:var(--card);border:1px solid var(--border)}
+.lbi{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--border)}
+.lbi:last-child{border-bottom:none}
+.lbi:hover{background:rgba(220,20,60,.04)}
+.cg{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.cc{background:var(--card);border:1px solid var(--border);padding:18px}
+.cct{font-family:var(--font-d);font-size:.95rem;letter-spacing:.05em;margin-bottom:12px}
+.cr{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:.72rem}
+.cr:last-child{border-bottom:none}
+.ck{color:var(--sub)}.cv{color:var(--text)}
+.cb{background:var(--card);border:1px solid var(--border);padding:18px;margin-bottom:18px}
+.cbt{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:14px}
+.empty{text-align:center;padding:40px;color:var(--muted);font-size:.75rem}
+
+/* Bot offline banner */
+.bot-banner{margin:28px 28px 0;padding:14px 18px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);display:flex;align-items:center;gap:12px;font-size:.75rem;color:#ef4444}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-wrap">
+    <div class="login-logo">🎫 KYSTE</div>
+    <div class="login-sub">Tickets v3 — Dashboard</div>
+    <div class="login-card">
+      <div class="login-title">Connexion requise</div>
+      <div class="login-desc">Connecte-toi avec Discord pour accéder<br>aux statistiques du serveur.</div>
+      <button class="discord-btn" onclick="loginDiscord()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.033.054a19.93 19.93 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+        Se connecter avec Discord
+      </button>
+      <div class="login-badge">KYSTE TICKETS v3 • ZkrDev</div>
+      <div class="login-err" id="loginErr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING SCREEN -->
+<div id="loadingScreen" style="display:none;position:fixed;inset:0;z-index:90;align-items:center;justify-content:center;background:var(--bg);flex-direction:column;gap:16px">
+  <div class="spinner"></div>
+  <div class="loading-txt" id="loadingTxt">Vérification en cours...</div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="appSidebar" style="display:none">
+  <div class="logo">
+    <div class="logo-name">🎫 KYSTE</div>
+    <div class="logo-ver">TICKETS v3 — DASHBOARD</div>
+  </div>
+  <nav>
+    <div class="ns">// Général</div>
+    <div class="ni active" data-page="overview">📊 &nbsp;Aperçu</div>
+    <div class="ni" data-page="tickets">🎫 &nbsp;Tickets</div>
+    <div class="ni" data-page="panels">📋 &nbsp;Panels</div>
+    <div class="ns">// Staff</div>
+    <div class="ni" data-page="leaderboard">🏆 &nbsp;Leaderboard</div>
+    <div class="ns">// Système</div>
+    <div class="ni" data-page="config">⚙️ &nbsp;Config</div>
+  </nav>
+  <div class="sfoot">
+    <!-- User connecté -->
+    <div class="user-card" id="userCard">
+      <img class="user-av" id="userAv" src="" alt="">
+      <div class="user-info">
+        <div class="user-name" id="userName">—</div>
+        <div class="user-tag">Discord</div>
+      </div>
+    </div>
+    <!-- Status bot -->
+    <div class="bot-status" id="botStatus">
+      <div class="bot-dot unk" id="botDot"></div>
+      <span id="botLabel">Vérification bot...</span>
+    </div>
+    <button class="rbtn-s" onclick="refresh()">↻ Actualiser</button>
+    <button class="logout-btn" onclick="logout()">↩ Déconnexion</button>
+    <div style="display:flex;align-items:center">
+      <span class="sdot" id="dot"></span>
+      <span class="slbl" id="slbl">Chargement...</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="main" id="appMain" style="display:none">
+  <div class="topbar">
+    <div class="tbt">DASHBOARD</div>
+    <div class="tbb">KYSTE TICKETS</div>
+    <button class="rbtn" onclick="refresh()">↻ Actualiser</button>
+    <span class="lref" id="lref">—</span>
+  </div>
+  <!-- Bot offline banner -->
+  <div class="bot-banner" id="botBanner" style="display:none">
+    🤖 &nbsp;<strong>Bot hors ligne ou absent du serveur</strong> — Les données peuvent être obsolètes.
+  </div>
+  <div class="page active" id="page-overview"><div class="empty">⏳ Chargement...</div></div>
+  <div class="page" id="page-tickets"><div class="empty">⏳ Chargement...</div></div>
+  <div class="page" id="page-panels"><div class="empty">⏳ Chargement...</div></div>
+  <div class="page" id="page-leaderboard"><div class="empty">⏳ Chargement...</div></div>
+  <div class="page" id="page-config"><div class="empty">⏳ Chargement...</div></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  ⚠️  MODIFIE CES 2 VALEURS AVANT MISE EN LIGNE
+// ═══════════════════════════════════════════════════
+const WORKER = "https://kyste-tickets-api.TON_SOUS_DOMAINE.workers.dev";
+const GID    = "TON_GUILD_ID_ICI";
+// ═══════════════════════════════════════════════════
+
+const S = { session:null, user:null, stats:null, tickets:[], panels:[], antispam:{}, verify:{}, logs:{} };
+
+// ── NAV ─────────────────────────────────────────────
+document.querySelectorAll('.ni[data-page]').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('page-' + el.dataset.page).classList.add('active');
+  });
+});
+
+// ── SHOW/HIDE ────────────────────────────────────────
+function showLogin(err) {
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display   = 'flex';
+  document.getElementById('appSidebar').style.display    = 'none';
+  document.getElementById('appMain').style.display       = 'none';
+  if (err) {
+    const el = document.getElementById('loginErr');
+    el.textContent = err; el.style.display = 'block';
+  }
+}
+function showLoading(txt) {
+  document.getElementById('loadingScreen').style.display = 'flex';
+  document.getElementById('loadingScreen').style.flexDirection = 'column';
+  document.getElementById('loadingTxt').textContent = txt || 'Chargement...';
+  document.getElementById('loginScreen').style.display = 'none';
+}
+function showApp() {
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display   = 'none';
+  document.getElementById('appSidebar').style.display    = 'flex';
+  document.getElementById('appMain').style.display       = 'flex';
+}
+
+// ── AUTH ─────────────────────────────────────────────
+function loginDiscord() {
+  showLoading('Redirection vers Discord...');
+  window.location.href = `${WORKER}/auth/login`;
+}
+
+async function checkSession(token) {
+  showLoading('Vérification de la session...');
+  try {
+    const r = await fetch(`${WORKER}/auth/me?session=${token}`);
+    if (!r.ok) { showLogin(r.status === 401 ? 'Session expirée, reconnecte-toi.' : null); return; }
+    S.user    = await r.json();
+    S.session = token;
+    sessionStorage.setItem('kt_session', token);
+    // Affiche les infos user
+    document.getElementById('userAv').src     = S.user.avatar;
+    document.getElementById('userName').textContent = S.user.username;
+    // Bot status
+    const botDot   = document.getElementById('botDot');
+    const botLabel = document.getElementById('botLabel');
+    const botBanner= document.getElementById('botBanner');
+    if (S.user.bot_in_guild) {
+      botDot.className   = 'bot-dot on';
+      botLabel.textContent = '🤖 Bot en ligne';
+      botBanner.style.display = 'none';
+    } else {
+      botDot.className   = 'bot-dot off';
+      botLabel.textContent = '❌ Bot absent';
+      botBanner.style.display = 'flex';
+    }
+    showApp();
+    await refresh();
+  } catch(e) {
+    showLogin('Erreur de connexion : ' + e.message);
+  }
+}
+
+function logout() {
+  const tok = S.session || sessionStorage.getItem('kt_session');
+  if (tok) fetch(`${WORKER}/auth/logout?session=${tok}`).catch(()=>{});
+  sessionStorage.removeItem('kt_session');
+  S.session = null; S.user = null;
+  showLogin();
+}
+
+// ── API ──────────────────────────────────────────────
+async function api(ep) {
+  const r = await fetch(`${WORKER}/api${ep}`);
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+async function refresh() {
+  try {
+    [S.stats,S.tickets,S.panels,S.antispam,S.verify,S.logs] = await Promise.all([
+      api(`/stats/${GID}`), api(`/tickets/${GID}`), api(`/panels/${GID}`),
+      api(`/antispam/${GID}`), api(`/verify/${GID}`), api(`/logs/${GID}`)
+    ]);
+    document.getElementById('dot').className  = 'sdot on';
+    document.getElementById('slbl').textContent = 'En ligne';
+    document.getElementById('lref').textContent = 'Maj ' + new Date().toLocaleTimeString('fr-FR');
+    renderAll();
+  } catch(e) {
+    document.getElementById('dot').className  = 'sdot off';
+    document.getElementById('slbl').textContent = 'Erreur API';
+  }
+}
+
+// ── RENDER ───────────────────────────────────────────
+const pl  = p => p==='low'?'🟢 Basse':p==='medium'?'🟡 Moy':'🔴 Haute';
+const pbc = p => p==='low'?'bl':p==='medium'?'bm':'bh';
+const fmt = iso => iso ? new Date(iso).toLocaleString('fr-FR') : '—';
+function renderAll(){ rOverview(); rTickets(); rPanels(); rLeaderboard(); rConfig(); }
+
+function rOverview() {
+  const s=S.stats, tks=S.tickets;
+  const open=tks.filter(t=>t.status==='open');
+  const hi=open.filter(t=>t.priority==='high').length;
+  const low=open.filter(t=>t.priority==='low').length;
+  const med=open.filter(t=>t.priority==='medium').length;
+  const tot=Math.max(open.length,1);
+  const bH=n=>Math.max(Math.round(n/tot*100),n>0?8:0);
+  document.getElementById('page-overview').innerHTML=`
+    <div class="sg">
+      <div class="sc" style="--accent:#DC143C"><div class="sc-i">🎫</div><div class="sc-l">Tickets ouverts</div><div class="sc-v">${s.open_tickets}</div><div class="sc-s">${hi} haute priorité</div></div>
+      <div class="sc" style="--accent:#22c55e"><div class="sc-i">📈</div><div class="sc-l">Total ouverts</div><div class="sc-v">${s.total_opened}</div></div>
+      <div class="sc" style="--accent:#3b82f6"><div class="sc-i">📉</div><div class="sc-l">Total fermés</div><div class="sc-v">${s.total_closed}</div><div class="sc-s">taux ${s.total_opened>0?Math.round(s.total_closed/s.total_opened*100):0}%</div></div>
+      <div class="sc" style="--accent:#eab308"><div class="sc-i">📋</div><div class="sc-l">Panels</div><div class="sc-v">${s.panels}</div></div>
+      <div class="sc" style="--accent:${s.antispam_enabled?'#22c55e':'#333'}"><div class="sc-l">🛡️ Anti-Spam</div><div class="sc-v" style="font-size:1.2rem;margin-top:8px">${s.antispam_enabled?'✅ Actif':'❌ Inactif'}</div></div>
+      <div class="sc" style="--accent:${s.verify_enabled?'#22c55e':'#333'}"><div class="sc-l">🔐 Vérification</div><div class="sc-v" style="font-size:1.2rem;margin-top:8px">${s.verify_enabled?'✅ Active':'❌ Inactive'}</div></div>
+    </div>
+    <div class="cb">
+      <div class="cbt">// RÉPARTITION PRIORITÉS — tickets ouverts</div>
+      <div style="display:flex;gap:24px;align-items:flex-end">
+        <div style="flex:1">
+          <div style="display:flex;align-items:flex-end;gap:10px;height:80px">
+            <div style="flex:1;background:rgba(34,197,94,.4);border-radius:2px 2px 0 0;height:${bH(low)}%;min-height:${low>0?'8px':'2px'};transition:height .5s"></div>
+            <div style="flex:1;background:rgba(234,179,8,.4);border-radius:2px 2px 0 0;height:${bH(med)}%;min-height:${med>0?'8px':'2px'};transition:height .5s"></div>
+            <div style="flex:1;background:rgba(239,68,68,.4);border-radius:2px 2px 0 0;height:${bH(hi)}%;min-height:${hi>0?'8px':'2px'};transition:height .5s"></div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:8px;font-size:.62rem;color:var(--sub)">
+            <div style="flex:1;text-align:center">🟢 Basse (${low})</div>
+            <div style="flex:1;text-align:center">🟡 Moy. (${med})</div>
+            <div style="flex:1;text-align:center">🔴 Haute (${hi})</div>
+          </div>
+        </div>
+        <div style="text-align:right"><div style="font-size:.7rem;color:var(--sub)">Ouverts</div><div style="font-family:var(--font-d);font-size:2.4rem;color:var(--red)">${open.length}</div></div>
+      </div>
+    </div>
+    <div class="shdr"><div class="stit">Tickets récents</div><div class="slin"></div></div>
+    <div class="tw"><table>
+      <thead><tr><th>#</th><th>Status</th><th>Priorité</th><th>Catégorie</th><th>Claim</th><th>Ouvert le</th></tr></thead>
+      <tbody>${tks.slice(0,10).map(t=>`<tr>
+        <td style="color:var(--red)">#${String(t.number).padStart(4,'0')}</td>
+        <td><span class="b ${t.status==='open'?'bo':'bc'}">${t.status==='open'?'🟢':'⚫'} ${t.status}</span></td>
+        <td><span class="b ${pbc(t.priority)}">${pl(t.priority)}</span></td>
+        <td>${t.category||'—'}</td>
+        <td>${t.claimed_by?'<span style="color:var(--green)">✅</span>':'—'}</td>
+        <td style="font-size:.68rem">${fmt(t.opened_at)}</td>
+      </tr>`).join('')||'<tr><td colspan="6" class="empty">Aucun ticket</td></tr>'}</tbody>
+    </table></div>`;
+}
+
+function rTickets() {
+  const tks=S.tickets, open=tks.filter(t=>t.status==='open'), cl=tks.filter(t=>t.status==='closed');
+  document.getElementById('page-tickets').innerHTML=`
+    <div class="sg" style="grid-template-columns:repeat(3,1fr)">
+      <div class="sc" style="--accent:#DC143C"><div class="sc-l">Ouverts</div><div class="sc-v">${open.length}</div></div>
+      <div class="sc" style="--accent:#555"><div class="sc-l">Fermés</div><div class="sc-v">${cl.length}</div></div>
+      <div class="sc" style="--accent:#eab308"><div class="sc-l">Total</div><div class="sc-v">${tks.length}</div></div>
+    </div>
+    <div class="shdr"><div class="stit">Tous les tickets</div><div class="slin"></div></div>
+    <div class="tw"><table>
+      <thead><tr><th>#</th><th>Status</th><th>Priorité</th><th>Catégorie</th><th>User ID</th><th>Claim</th><th>Ouvert le</th></tr></thead>
+      <tbody>${tks.map(t=>`<tr>
+        <td style="color:var(--red)">#${String(t.number).padStart(4,'0')}</td>
+        <td><span class="b ${t.status==='open'?'bo':'bc'}">${t.status==='open'?'🟢':'⚫'} ${t.status}</span></td>
+        <td><span class="b ${pbc(t.priority)}">${pl(t.priority)}</span></td>
+        <td>${t.category||'—'}</td>
+        <td style="font-size:.66rem;color:var(--muted)">${t.user_id}</td>
+        <td>${t.claimed_by?`<span style="color:var(--green);font-size:.68rem">${t.claimed_by}</span>`:'—'}</td>
+        <td style="font-size:.68rem">${fmt(t.opened_at)}</td>
+      </tr>`).join('')||'<tr><td colspan="7" class="empty">Aucun ticket</td></tr>'}</tbody>
+    </table></div>`;
+}
+
+function rPanels() {
+  const panels=S.panels;
+  document.getElementById('page-panels').innerHTML=`
+    <div class="shdr"><div class="stit">Panels (${panels.length})</div><div class="slin"></div></div>
+    <div class="pg">${panels.map(p=>{
+      const col=p.color.replace('0x','#');
+      return `<div class="pc">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="font-size:1.4rem">${p.emoji}</span>
+          <span style="font-family:var(--font-d);font-size:1rem">${p.name}</span>
+          <div style="width:9px;height:9px;border-radius:50%;background:${col};box-shadow:0 0 8px ${col}55;margin-left:auto"></div>
+        </div>
+        <div style="font-size:.7rem;color:var(--sub);display:flex;flex-direction:column;gap:5px">
+          <span>🔢 Limite : <b style="color:var(--text)">${p.ticket_limit}</b></span>
+          <span>⏱️ Inactivité : <b style="color:var(--text)">${p.inactivity_hours>0?p.inactivity_hours+'h':'Off'}</b></span>
+          <span>🎨 <code style="color:${col}">${col}</code></span>
+        </div>
+      </div>`;
+    }).join('')||'<div class="empty">Aucun panel</div>'}</div>`;
+}
+
+function rLeaderboard() {
+  const staff=S.stats?.staff_leaderboard||{};
+  const entries=Object.entries(staff).filter(([k])=>k!=='_global').map(([uid,s])=>({uid,...s})).sort((a,b)=>(b.closed||0)-(a.closed||0));
+  document.getElementById('page-leaderboard').innerHTML=`
+    <div class="shdr"><div class="stit">🏆 Leaderboard Staff</div><div class="slin"></div></div>
+    <div class="lb">${entries.length?entries.map((s,i)=>{
+      const avg=s.ratings_count>0?(s.ratings_sum/s.ratings_count).toFixed(1):'—';
+      return `<div class="lbi">
+        <div style="font-family:var(--font-d);font-size:1.4rem;color:${i<3?'var(--red)':'var(--muted)'};width:32px">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</div>
+        <div style="flex:1">
+          <div style="font-size:.82rem;color:var(--text);margin-bottom:2px">User ${s.uid}</div>
+          <div style="font-size:.68rem;color:var(--sub)">${s.closed||0} fermés · ${s.claimed||0} claims · ${s.ratings_count||0} notes</div>
+        </div>
+        <div style="font-size:.78rem;color:var(--yellow)">⭐ ${avg}/5</div>
+      </div>`;
+    }).join(''):'<div class="empty">Aucune donnée staff</div>'}</div>`;
+}
+
+function rConfig() {
+  const a=S.antispam, v=S.verify, l=S.logs;
+  document.getElementById('page-config').innerHTML=`
+    <div class="shdr"><div class="stit">Configuration serveur</div><div class="slin"></div></div>
+    <div class="cg">
+      <div class="cc">
+        <div class="cct">🛡️ Anti-Spam / Raid</div>
+        <div class="cr"><span class="ck">Status</span><span class="b ${a.enabled?'bon':'boff'}">${a.enabled?'✅ Actif':'❌ Inactif'}</span></div>
+        <div class="cr"><span class="ck">Action</span><span class="cv">${a.action||'mute'}</span></div>
+        <div class="cr"><span class="ck">Seuil spam</span><span class="cv">${a.spam_threshold||5} msg/${a.spam_window||5}s</span></div>
+        <div class="cr"><span class="ck">Mass-join</span><span class="cv">${a.join_threshold||10}/${a.join_window||10}s</span></div>
+        <div class="cr"><span class="ck">Comptes récents</span><span class="cv">&lt; ${a.new_account_days||7}j</span></div>
+        <div class="cr"><span class="ck">Block invites</span><span class="b ${a.block_invites?'bon':'boff'}">${a.block_invites?'✅':'❌'}</span></div>
+      </div>
+      <div class="cc">
+        <div class="cct">🔐 Vérification</div>
+        <div class="cr"><span class="ck">Status</span><span class="b ${v.enabled?'bon':'boff'}">${v.enabled?'✅ Active':'❌ Inactive'}</span></div>
+        <div class="cr"><span class="ck">Méthode</span><span class="cv">${v.method||'—'}</span></div>
+        <div class="cr"><span class="ck">Thème captcha</span><span class="cv">${v.captcha_theme||'—'}</span></div>
+      </div>
+      <div class="cc">
+        <div class="cct">📋 Logs</div>
+        <div class="cr"><span class="ck">Status</span><span class="b ${l.enabled?'bon':'boff'}">${l.enabled?'✅ Actifs':'❌ Inactifs'}</span></div>
+        <div class="cr"><span class="ck">Événements</span><span class="cv" style="font-size:.65rem;max-width:130px;text-align:right">${(l.events||[]).join(', ')||'—'}</span></div>
+      </div>
+    </div>`;
+}
+
+// ── INIT ─────────────────────────────────────────────
+window.addEventListener('load', async () => {
+  // Callback OAuth — ?session=xxx dans l'URL (mis par le Worker après redirect)
+  const urlParams = new URLSearchParams(window.location.search);
+  const sessionFromUrl = urlParams.get('session');
+
+  if (sessionFromUrl) {
+    // Nettoie l'URL
+    window.history.replaceState({}, '', '/');
+    await checkSession(sessionFromUrl);
+    return;
+  }
+
+  // Session existante en sessionStorage
+  const saved = sessionStorage.getItem('kt_session');
+  if (saved) {
+    await checkSession(saved);
+    return;
+  }
+
+  // Rien → login screen
+  showLogin();
+});
+
+setInterval(() => { if (S.session) refresh(); }, 30000);
+</script>
+</body>
+</html>
